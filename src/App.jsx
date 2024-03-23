@@ -45,10 +45,14 @@ function checkVictory( gameBoard ) {
 }
 
 function App() {
+  const [playerNames, setPlayerNames] = useState({
+    'X': "Player 1",
+    'O': "Player 2"
+  })
   const [gameTurns, setGameTurns] = useState([]);
   const activePlayer = deriveActivePlayer(gameTurns)
 
-  let gameBoard = initialGameBoard;
+  let gameBoard = [...initialGameBoard.map((row) => [...row])];
 
   for (const turn of gameTurns) {
       const { square, player } = turn
@@ -56,18 +60,30 @@ function App() {
       gameBoard[row][col] = player
   };
 
+  function resetGameHandler() {
+    setGameTurns([]);
+  }
+
+  function playerNameChangeHandler(playerSymbol, newName) {
+    setPlayerNames((oldPlayerNames) => {
+      let newPlayerNames = {...oldPlayerNames};
+      newPlayerNames[playerSymbol] = newName;
+      return newPlayerNames
+    })
+  }
+
   const victoriousPlayer = checkVictory(gameBoard);
 
   let victoryElement = <></>
 
   if (victoriousPlayer) {
-    victoryElement = <GameOver winner={victoriousPlayer}/>
+    victoryElement = <GameOver winner={playerNames[victoriousPlayer]} rematchHandler={resetGameHandler}/>
   }
 
   const hasDraw = gameTurns.length >= 9 && !victoriousPlayer;
 
   if (hasDraw) {
-    victoryElement = <GameOver winner={null}/>
+    victoryElement = <GameOver winner={null} rematchHandler={resetGameHandler}/>
   }
 
   function handleSelectSquare(rowIndex, colIndex) {
@@ -77,6 +93,7 @@ function App() {
       const newGameTurns = [ { 
         square: {row: rowIndex, col: colIndex},
         player: currentPlayer, 
+        playerName: playerNames[currentPlayer],
         turnNumber: prevGameTurns.length + 1}, 
         ...prevGameTurns
       ];
@@ -88,8 +105,8 @@ function App() {
   return <main>
     <div id="game-container">
       <ol id="players" className="highlight-player">
-        <Player name={"Player 1"} symbol={"X"} isActive={activePlayer === "X"}/>
-        <Player name={"Player 2"} symbol={"O"} isActive={activePlayer === "O"}/>
+        <Player name={playerNames['X']} symbol={"X"} isActive={activePlayer === "X"} nameChangeHandler={playerNameChangeHandler}/>
+        <Player name={playerNames['O']} symbol={"O"} isActive={activePlayer === "O"} nameChangeHandler={playerNameChangeHandler}/>
       </ol>
 
       {victoryElement}
